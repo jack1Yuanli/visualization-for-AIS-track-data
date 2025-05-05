@@ -1,0 +1,65 @@
+import pylab as plt
+import pandas as pd
+
+# 读取CSV文件
+#data = pd.read_csv(r'')
+print(data.index)  # 获取行的索引名称
+print(data.columns)  # 获取列的索引名称
+
+# 使用正确的列名 'mmsi'
+MMSIDATA = data['mmsi']
+print(MMSIDATA)
+SHIPSMMSI = list(set(MMSIDATA))  # 获取所有唯一的MMSI
+print(SHIPSMMSI)
+lens = len(SHIPSMMSI)
+print(lens)
+
+# 初始化标志，确保图例只添加一次
+legend_added_9001 = False
+legend_added_9002 = False
+
+# 遍历每艘船的MMSI
+for i in range(lens):
+    mmsi = SHIPSMMSI[i]
+    # 筛选当前MMSI的数据
+    ONESHIP = data[data['mmsi'] == mmsi]
+    
+    # 按时间排序
+    ONESHIP = ONESHIP.sort_values(by=["time"], axis=0)
+    
+    # 分离source为9001和9002的数据
+    ship_9001 = ONESHIP[ONESHIP['source'] == 9001]
+    ship_9002 = ONESHIP[ONESHIP['source'] == 9002]
+    
+    # 绘制source为9001的轨迹（红色）
+    if len(ship_9001) > 1:
+        plt.plot(ship_9001['lon'], ship_9001['lat'], color='red', linewidth=1, 
+                 label='Source 9001' if not legend_added_9001 else "")
+        legend_added_9001 = True  # 确保图例只添加一次
+        
+        # 标注batch号（在起点或终点标注）
+        batch_9001 = ship_9001['batch'].iloc[0]  # 取第一个batch号
+        plt.text(ship_9001['lon'].iloc[0], ship_9001['lat'].iloc[0], 
+                 f'Batch {batch_9001}', fontsize=8, color='red')
+    
+    # 绘制source为9002的轨迹（黑色）
+    if len(ship_9002) > 1:
+        plt.plot(ship_9002['lon'], ship_9002['lat'], color='black', linewidth=1, 
+                 label='Source 9002' if not legend_added_9002 else "")
+        legend_added_9002 = True  # 确保图例只添加一次
+        
+        # 标注batch号（在起点或终点标注）
+        batch_9002 = ship_9002['batch'].iloc[0]  # 取第一个batch号
+        plt.text(ship_9002['lon'].iloc[0], ship_9002['lat'].iloc[0], 
+                 f'Batch {batch_9002}', fontsize=8, color='black')
+
+# 设置图形标题和标签
+#plt.title('AIS Data Trajectories (Source 9001: Red, Source 9002: Black)', fontsize=14)
+plt.xlabel('Longitude(°)')
+plt.ylabel('Latitude(°)')
+
+# 显示图例
+plt.legend(loc="upper right")
+
+# 显示图形
+plt.show()
